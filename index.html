@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Finding Friends Rules</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      body {
+        font-family: 'Open Sans', sans-serif;
+      }
+      table, th, td {
+        border: 1px solid lightgrey;
+        border-collapse: collapse;
+      }
+      table {
+        text-align: center;
+      }
+      td {
+       vertical-align: top;
+      }
+      .scrollable {
+        overflow-x: scroll;
+        width: 100vw;
+      }
+      .row {
+        display: flex;
+      }
+      .center.row {
+        justify-content: center;
+      }
+      .table-cell {
+        margin: 10px 20px;
+      }
+      .table-heading-cell {
+        padding: 0 20px;
+      }
+      table.center-cards .card {
+        margin: 5px auto;
+      }
+      .card {
+        text-align: left;
+        width: 50px;
+        height: 75px;
+        border: 1px solid lightgrey;
+        border-radius: 5px;
+        margin: 5px;
+        display: flex;
+        flex-direction: column;
+        background: #f4f6f8; /* Matches joker impages color */
+      }
+      .number {
+        font-size: 18px;
+        font-weight: bold;
+        margin: 0 5px;
+      }
+      .large.suit:before {
+        display: inline-block;
+        font-size: 30px;
+      }
+      .large.suit {
+        align-self: center;
+      }
+      .heart, .diamond {
+        color: red;
+      }
+      .spade, .club{
+        color: black;
+      }
+      .heart .suit:before {
+        content: '\02665';
+      }
+      .diamond .suit:before {
+        content: '\02666';
+      }
+      .spade .suit:before {
+        content: '\02660';
+      }
+      .club .suit:before {
+        content: '\02663';
+      }
+      .joker {
+        background-size: contain;
+        -webkit-print-color-adjust: exact;
+      }
+      .big.joker {
+        background-image: url("./big_joker.png");
+      }
+      .small.joker {
+        background-image: url("./small_joker.png");
+      }
+      .score {
+        font-family: Segoe, "Segoe UI", "DejaVu Sans", "Trebuchet MS", Verdana, "sans-serif";
+      }
+      .score td {
+        padding: 5px;
+      }
+      .score table,
+      .score td {
+        border: 1px solid darkgrey;
+      }
+  </style>
+  </head>
+
+  <body>
+    <h2>Overview</h2>
+    <p>Finding Friends or &#25214;&#26379;&#21451; is a trick taking game (like hearts or bridge where highest card wins). But it differs from most western games in that:</p>
+    <ol>
+      <li>It requires multiple decks of cards</li>
+      <li>Jokers are in play</li>
+      <li>Teams form as you're playing during each round</li>
+    </ol>
+
+    <p>The objective of each round is to win as many points as possible for your team</p>
+
+    <h3>Cards Worth Points:</h3>
+    <p>Kings, 10s, and 5's are the only cards worth any points.</p>
+    <div class="scrollable">
+    <table>
+      <tbody>
+        <tr>
+          <td class="table-heading-cell">10 Points</td>
+          <td class="table-heading-cell">5 Points</td>
+        </tr>
+        <tr>
+          <td id="instructions-10-point-cards"></td>
+          <td id="instructions-5-point-cards"></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+
+    <h2>Gameplay</h2>
+    <p>At a high level, everyone puts down a card or cards and the highest card(s) of a round wins all the cards that were played that round. However only certain cards are worth points. Whoever wins the round starts the next. And while rounds are being played, everyone is trying to form teams.</p>
+    <p>Knowing which cards you're forced to play and what is the highest card(s) can get tricky though</p>
+
+    <p>pairs, triples, etc. must be of the same number and the <i>same suit</i>.</p>
+    <div class="scrollable">
+    <table>
+      <tbody>
+      <tr>
+        <td>Pair</td>
+        <td>Not Pair</td>
+      </tr>
+      <tr>
+        <td>
+          <div class="table-cell row">
+            <div class="card heart">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+            <div class="card heart">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="table-cell row">
+            <div class="card spade">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+            <div class="card heart">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    <p>Jokers are also in play - with one considered small and the other big. They are considered trump cards. There is also both a trump suit and trump number that can change between game rounds.</p>
+    <table>
+      <tbody>
+      <tr>
+        <td>Big Joker</td>
+        <td>Small Joker</td>
+      </tr>
+      <tr>
+        <td>
+          <div class="table-cell row">
+            <div class="big joker card"></div>
+          </div>
+        </td>
+        <td>
+          <div class="table-cell row">
+            <div class="small joker card"></div>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+
+    </div>
+
+   <h3>High card:</h3>
+    <p>In general, the highest card of the leading suit wins. However the trump suit beats non-trump suits. So this would be the hierarchy for single card hands if 2&#x2663;  was the trump:</p>
+    <div class="scrollable">
+    <table class="center-cards">
+      <tbody>
+        <tr>
+          <td class="table-heading-cell">Big Joker</td>
+          <td class="table-heading-cell">Little Joker</td>
+          <td class="table-heading-cell">Trump Number in Trump Suit</td>
+          <td class="table-heading-cell">Trump Number</td>
+          <td class="table-heading-cell">Trump Suit Cards</td>
+          <td class="table-heading-cell">Plain Suit Cards</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="big joker card"></div>
+          </td>
+          <td>
+            <div class="small joker card"></div>
+          </td>
+          <td>
+            <div class="card club">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+          </td>
+          <td>
+            <div class="card heart">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+          </td>
+          <td>
+            <div class="card club">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div>...</div>
+            <div class="card club">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+          </td>
+          <td>
+            <div class="card heart">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Possible Hands:</h3>
+    <p>You can start a round with one of the following.</p>
+    <p>Highest card of that hand type wins. I.e. 2 Triples do not beat 3 consecutive pairs.</p>
+    <div class="scrollable">
+    <table>
+      <tbody>
+      <tr>
+        <td>Single Card</td>
+        <td>Pairs</td>
+        <td>Consecutive Pairs</td>
+        <td>Triples (and so forth)</td>
+        <td>Consecutive Triples</td>
+      </tr>
+      <tr>
+        <td>
+          <div class="table-cell center row">
+            <div class="big joker card"></div>
+          </div>
+        </td>
+        <td>
+          <div class="table-cell center row">
+            <div class="card heart">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div class="card heart">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+          </div>
+          <div class="table-cell center row">
+            <div class="big joker card"></div>
+            <div class="big joker card"></div>
+          </div>
+        </td>
+        <td>
+          <div class="table-cell row">
+            <div class="card spade">
+              <span class="number">K</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">K</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+          </div>
+          <div class="table-cell row">
+            <div class="card spade">
+              <span class="number">Q</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">Q</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">K</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">K</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div class="card spade">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+          </div>
+          <hr>
+          <p>If 3 &#x2663; was the trump card:</p>
+          <div class="table-cell row">
+            <div class="card heart">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+            <div class="card heart">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+            <div class="card club">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+            <div class="card club">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+          </div>
+          <div class="table-cell row">
+            <div class="card heart">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+            <div class="card heart">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+          </div>
+          <div class="table-cell row">
+            <div class="card club">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+            <div class="card club">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+            <div class="small joker card"></div>
+            <div class="small joker card"></div>
+            <div class="big joker card"></div>
+            <div class="big joker card"></div>
+          </div>
+          <div class="table-cell row">
+            <div class="card club">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div class="card club">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">3</span><span class="suit large"></span>
+            </div>
+          </div>
+          <div class="table-cell row">
+            <div class="card diamond">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">2</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">4</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">4</span><span class="suit large"></span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="table-cell row">
+            <div class="card diamond">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+            <div class="card diamond">
+              <span class="number">A</span><span class="suit large"></span>
+            </div>
+          </div>
+        </td>
+        <td style="padding: 0 5px">
+          <p>You can extrapolate &#x1F913;</p>
+        </td>
+      </tr>
+      <tr>
+        <td class="table-heading-cell" style="max-width: 100px">
+          <p>Straights are not a valid hand</p>
+        </td>
+        <td class="table-heading-cell" style="max-width: 150px">
+          <p>Other players have to put down a pair if they have them</p>
+        </td>
+        <td class="table-heading-cell" style="max-width: 400px">
+          <p>Other players have to put down as many pairs as they have.</p>
+          <p>If a single pair is played and you have no other pairs, you still have to play a pair even if it means breaking up your consecutive pair.</p>
+        </td>
+        <td class="table-heading-cell" style="max-width: 250px">
+          <p>Other players who have pairs must put down a pair if they don't have triples.</p>
+          <p>You do not have play triples during pairs or consecutive pairs unless they're the only cards you have of that suit.</p>
+        </td>
+        <td></td>
+      </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Suits & Trumps:</h3>
+    <p>The first card of the round determines the suit of the round. If you have any cards from the leading suit, you must play them. If you're out cards from the leading suit, you can play other suits.</p>
+    <p>However cards from non-trump suits cannot be higher than the leading suit. But it's a good way to burn cards to try and be out of another suit.</p>
+    <p>If the leading hand was a single card and you play a trump card, you're automatically higher than cards of the leading suit. (If someone after you is also out of the leading suit, they can play a higher trump though and win the hand).</p>
+    <p>However if the leading hand was a pair, you'd need a trump pair to beat their hand.</p>
+
+    <h3>Forming teams:</h3>
+    <p>Any points you earn go towards your team. There are 2 teams - the trumpmaker's team and the defenders</p>
+
+    <h3>Winning the Round:</h3>
+    <p>Winning the round depends on the number of decks and the number of people on the trumpmaker's team. You can also jump mulitple levels if the trumpmaker has fewer teammates than the max they're allowed.</p>
+    <p>Note: There is an advantage to be on the trumpmaker's team due to starting with control of the game, therefore the points required to win are shifted slighty in the defenders' favor.</p>
+    <p>Adapted from <a href="https://www.pagat.com/kt5/pengyou.html">https://www.pagat.com/kt5/pengyou.html</a>.</p>
+    <div class="scrollable">
+    <table class="score">
+  <tbody><tr>
+    <td rowspan="11">&nbsp;</td>
+    <td colspan="3" align="center"><strong>Number of players</strong></td>
+    <td colspan="6" align="center"><strong>Trump maker's team size</strong></td>
+    </tr>
+  <tr>
+    <td align="center">5</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">2</td>
+    <td align="center">1</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+  </tr>
+  <tr>
+    <td align="center">6</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">3</td>
+    <td align="center">2</td>
+    <td align="center">1</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+  </tr>
+  <tr>
+    <td align="center">7</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">3</td>
+    <td align="center">2</td>
+    <td align="center">1</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+  </tr>
+  <tr>
+    <td align="center">&nbsp;</td>
+    <td align="center">8</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">4</td>
+    <td align="center">3</td>
+    <td align="center">2</td>
+    <td align="center">1</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+  </tr>
+  <tr>
+    <td align="center">&nbsp;</td>
+    <td align="center">9</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">4</td>
+    <td align="center">3</td>
+    <td align="center">2</td>
+    <td align="center">1</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+  </tr>
+  <tr>
+    <td align="center">&nbsp;</td>
+    <td align="center">10</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">5</td>
+    <td align="center">4</td>
+    <td align="center">3</td>
+    <td align="center">2</td>
+    <td align="center">1</td>
+    <td align="center">&nbsp;</td>
+  </tr>
+  <tr>
+    <td align="center">&nbsp;</td>
+    <td align="center">11</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">5</td>
+    <td align="center">4</td>
+    <td align="center">3</td>
+    <td align="center">2</td>
+    <td align="center">1</td>
+    <td align="center">&nbsp;</td>
+  </tr>
+  <tr>
+    <td align="center">&nbsp;</td>
+    <td align="center">&nbsp;</td>
+    <td align="center">12</td>
+    <td align="center">6</td>
+    <td align="center">5</td>
+    <td align="center">4</td>
+    <td align="center">3</td>
+    <td align="center">2</td>
+    <td align="center">1</td>
+  </tr>
+  <tr>
+    <td colspan="3" align="center"><strong>Number of decks</strong></td>
+    <td colspan="6" rowspan="2" align="center"><strong>Number of levels by which<br>
+trump makers (T) or defenders (D)<br>
+are promoted.</strong></td>
+    </tr>
+  <tr>
+    <td align="center">2</td>
+    <td align="center">3</td>
+    <td align="center">4</td>
+    </tr>
+  <tr>
+    <td rowspan="7" align="center" valign="middle"><strong>Defenders' <br>
+      card points</strong></td>
+    <td align="center">0</td>
+    <td align="center">0</td>
+    <td align="center">0</td>
+    <td align="center"><strong>T+3</strong></td>
+    <td align="center"><strong>T+6</strong></td>
+    <td align="center"><strong>T+9</strong></td>
+    <td align="center"><strong>T+12</strong></td>
+    <td align="center"><strong>T+15</strong></td>
+    <td align="center"><strong>T+18</strong></td>
+  </tr>
+  <tr>
+    <td align="center">5-35</td>
+    <td align="center">5-55</td>
+    <td align="center">5-75</td>
+    <td align="center"><strong>T+2</strong></td>
+    <td align="center"><strong>T+4</strong></td>
+    <td align="center"><strong>T+6</strong></td>
+    <td align="center"><strong>T+8</strong></td>
+    <td align="center"><strong>T+10</strong></td>
+    <td align="center"><strong>T+12</strong></td>
+  </tr>
+  <tr>
+    <td align="center">40-90</td>
+    <td align="center">60-140</td>
+    <td align="center">80-185</td>
+    <td align="center"><strong>T+1</strong></td>
+    <td align="center"><strong>T+2</strong></td>
+    <td align="center"><strong>T+3</strong></td>
+    <td align="center"><strong>T+4</strong></td>
+    <td align="center"><strong>T+5</strong></td>
+    <td align="center"><strong>T+6</strong></td>
+  </tr>
+  <tr>
+    <td align="center">95 and 100</td>
+    <td align="center">145 and 150</td>
+    <td align="center">190-205</td>
+    <td align="center"><strong>0</strong></td>
+    <td align="center"><strong>0</strong></td>
+    <td align="center"><strong>0</strong></td>
+    <td align="center"><strong>0</strong></td>
+    <td align="center"><strong>0</strong></td>
+    <td align="center"><strong>0</strong></td>
+  </tr>
+  <tr>
+    <td align="center">105-155</td>
+    <td align="center">155-235</td>
+    <td align="center">210-315</td>
+    <td align="center"><strong>D+1</strong></td>
+    <td align="center"><strong>D+1</strong></td>
+    <td align="center"><strong>D+1</strong></td>
+    <td align="center"><strong>D+1</strong></td>
+    <td align="center"><strong>D+1</strong></td>
+    <td align="center"><strong>D+1</strong></td>
+    </tr>
+  <tr>
+    <td align="center">160-195</td>
+    <td align="center">240-295</td>
+    <td align="center">320-395</td>
+    <td align="center"><strong>D+2</strong></td>
+    <td align="center"><strong>D+2</strong></td>
+    <td align="center"><strong>D+2</strong></td>
+    <td align="center"><strong>D+2</strong></td>
+    <td align="center"><strong>D+2</strong></td>
+    <td align="center"><strong>D+2</strong></td>
+    </tr>
+  <tr>
+    <td align="center">200+</td>
+    <td align="center">300+</td>
+    <td align="center">400+</td>
+    <td align="center"><strong>D+3</strong></td>
+    <td align="center"><strong>D+3</strong></td>
+    <td align="center"><strong>D+3</strong></td>
+    <td align="center"><strong>D+3</strong></td>
+    <td align="center"><strong>D+3</strong></td>
+    <td align="center"><strong>D+3</strong></td>
+  </tr>
+</tbody></table>
+    </div>
+
+    <h2>Setup</h2>
+    <p>Start drawing from the shuffled deck until there are not enough cards to divide evenly - however make sure there are at least 6 leftover cards. Players should group their cards by suit in their hands.</p>
+
+    <h3>Who Draws First?:</h3>
+    <p>
+    If it's the first game, someone will flip the top card before shuffling and count the number revealed starting from themself. The person they land on will go first.
+    Otherwise, starting from (but not including) the previous person who drew first, the first person who was part of the winning team from the last game will go first.
+    </p>
+    <p>In both cases, the player before them will cut the deck for them</p>
+
+    <h3>Determining the <u>Trump Suit</u> and <u>Trump Number</u>:</h3>
+    <p>At any point while drawing cards, a player may propose a trump suit by revealing a card of that suit in the number they're currently playing that game (more on this later).</p>
+    <p>Another player may contest this by revealing a pair of a different number or different suit (If playing with 3+ decks, this can be contested again with triples and so on and so forth). However the original proposer may defend their proposal by matching the number of cards.</p>
+    <p><u>Number player can propose trumps with:</u> Everyone starts off with the number 2. If you win a game, your number goes up by 1+ point. You can now only use that number to propose trumps. (e.g: You win the first game, you can now use any 3 in your hand to propose a trump. But you can no longer use the 2s in your hand). This is also how the overall winner is determined - the first person to win playing Aces wins the game.</p>
+    <p>The person who determines the trump suit/number starts the first play.</p>
+
+    <h3>Leftover cards:</h3>
+
+    <div id="root">
+      Loading...
+    </div>
+
+    <script type="text/babel">
+      const suits = ['diamond', 'club', 'heart', 'spade'];
+
+      const Card = (props) => {
+        let value = parseInt(props.value) || 0;
+        let numberString = '';
+        const classes = ['card', props.suit ?? 'club'];
+
+        if (props.type == 'BIG_JOKER') {
+          classes.push('big');
+          classes.push('joker');
+          value = 16;
+        } else if (props.type == 'SMALL_JOKER') {
+          classes.push('small');
+          classes.push('joker');
+          value = 15;
+        } else if (props.type == 'NUMBER' || !props.type) {
+          classes.push('number');
+          switch (value) {
+            case 11:
+              numberString = 'J';
+              break;
+            case 12:
+              numberString = 'Q';
+              break;
+            case 13:
+              numberString = 'K';
+              break;
+            default:
+              numberString = value.toString();
+          }
+        }
+
+        return <div className={classes.join(' ')} data-val={value} data-suit={props.suit}>
+          {numberString
+            ? <>
+                <span className="number">{numberString}</span>
+                <span className="suit large"></span>
+              </>
+            : null}
+        </div>
+      };
+
+      const App = (props) => {
+        return (
+         <>
+            <h1>Hello</h1>
+            <Card type="BIG_JOKER"></Card>
+            <Card value="11"></Card>
+          </>
+        );
+      }
+
+      ReactDOM.render(
+        <>
+          {suits.map(suit => <div className="table-cell row">
+            <Card value="10" suit={suit}/>
+            <Card value="13" suit={suit}/>
+          </div>)}
+        </>,
+        document.getElementById('instructions-10-point-cards')
+      );
+
+      ReactDOM.render(
+        <>
+          {suits.map(suit => <div className="table-cell row">
+            <Card value="5" suit={suit}/>
+          </div>)}
+        </>,
+        document.getElementById('instructions-5-point-cards')
+      );
+
+      ReactDOM.render(
+        <App/>,
+        document.getElementById('root')
+      );
+
+    </script>
+  </body>
+</html>
